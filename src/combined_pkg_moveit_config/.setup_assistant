@@ -1,0 +1,10 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: combined_pkg
+    relative_path: urdf/combine.urdf
+  srdf:
+    relative_path: config/combined_pkg.srdf
+  package_settings:
+    author_name: ali
+    author_email: achegini052@gmail.com
+    generated_timestamp: 1790491647

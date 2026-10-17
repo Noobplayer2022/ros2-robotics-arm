@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="combined_pkg">
+
+  <!-- ══════════════════════════════════════════════
+       World link  —  بدون inertia (KDL شکایت می‌کنه)
+       ══════════════════════════════════════════════ -->
+  <link name="world"/>
+
+  <!-- نوار نقاله در همون جای قبلی -->
+  <joint name="world_to_roll" type="fixed">
+    <parent link="world"/>
+    <child link="base_link_roll"/>
+    <origin xyz="-0.35 -0.70 0.05" rpy="0.0 0.0 -1.5708"/>
+  </joint>
+
+  <!--
+    ══════════════════════════════════════════════════
+    بازو رو به سمت نوار نقاله جابجا کردیم:
+      • قبلاً:  xyz="0.0 0.0 0.0"
+      • الان:   xyz="-0.35 -0.10 0.0"
+        – x = -0.35  →  هم‌راستا با مرکز نوار نقاله
+        – y = -0.10  →  کمی عقب‌تر از نوار (فاصله ~0.6m به مکعب)
+        – z =  0.0   →  روی زمین
+    ══════════════════════════════════════════════════
+  -->
+  <joint name="world_to_arm" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="-0.35 -0.10 -0.0" rpy="0.0 0.0 0.0"/>
+  </joint>
+
+  <!-- ══════════════════════════════════════════════
+       Conveyor belt links (بدون تغییر)
+       ══════════════════════════════════════════════ -->
+  <link name="base_link_roll">
+    <inertial>
+      <origin xyz="0.00030336 -2.123E-05 -0.00024837" rpy="0 0 0"/>
+      <mass value="6.5905"/>
+      <inertia ixx="0.35279" ixy="2.4171E-11" ixz="2.5621E-12"
+               iyy="0.014139" iyz="0.00075361" izz="0.35804"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/base_link_roll.STL"/></geometry>
+      <material name=""><color rgba="1 1 1 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.001" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/base_link_roll.STL"/></geometry>
+    </collision>
+  </link>
+
+  <link name="link_1_roll">
+    <inertial>
+      <origin xyz="0 0 -0.01012" rpy="0 0 0"/>
+      <mass value="1"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/link_1_roll.STL"/></geometry>
+      <material name=""><color rgba="1 1 1 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/link_1_roll.STL"/></geometry>
+    </collision>
+  </link>
+
+  <link name="belt_surface">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.20 0.97 0.002"/></geometry>
+      <material name="dark_gray"><color rgba="0.3 0.3 0.3 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.20 0.97 0.002"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="belt_joint" type="fixed">
+    <origin xyz="0 0 0.04" rpy="0 0 0"/>
+    <parent link="base_link_roll"/>
+    <child link="belt_surface"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <joint name="joint_1_roll" type="fixed">
+    <origin xyz="0.0019707 -0.0063511 0.03485" rpy="0 0 3.1416"/>
+    <parent link="base_link_roll"/>
+    <child link="link_1_roll"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <!-- ══════════════════════════════════════════════
+       Camera
+       دوربین به base_link وصله، با بازو جابجا میشه
+       ══════════════════════════════════════════════ -->
+  <link name="camera">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1e-4" ixy="0" ixz="0" iyy="1e-4" iyz="0" izz="1e-4"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.02 0.02 0.02"/></geometry>
+      <material name="red"><color rgba="1 0 0 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.02 0.02 0.02"/></geometry>
+    </collision>
+  </link>
+
+  <!--
+    دوربین از base_link بازو:
+      x=0.0   →  مستقیم بالای نوار نقاله (چون بازو الان در x=-0.35)
+      y=-0.60  →  رو به نوار نقاله نگاه کنه
+      z=0.60   →  ارتفاع مناسب برای دیدن کل نوار
+  -->
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera"/>
+    <origin xyz="0.0 -0.75 1.0" rpy="-3.14159 1.5708 0.0"/>
+  </joint>
+
+  <!-- ══════════════════════════════════════════════
+       Arm links (بدون تغییر)
+       ══════════════════════════════════════════════ -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0.073876" rpy="0 0 0"/>
+      <mass value="17.147"/>
+      <inertia ixx="0.192" ixy="-4.9423E-10" ixz="1.2752E-17"
+               iyy="0.192" iyz="2.6417E-18" izz="0.29544"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/base_link.STL"/></geometry>
+      <material name=""><color rgba="0.79216 0.81961 0.93333 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/base_link.STL"/></geometry>
+    </collision>
+  </link>
+
+  <link name="link_1">
+    <inertial>
+      <origin xyz="0 0.11047 0" rpy="0 0 0"/>
+      <mass value="3.0905"/>
+      <inertia ixx="0.026302" ixy="-2.5267E-15" ixz="-1.4177E-12"
+               iyy="0.019632" iyz="-7.4535E-12" izz="0.025388"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/link_1.STL"/></geometry>
+      <material name=""><color rgba="1 1 1 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/link_1.STL"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="joint_1" type="revolute">
+    <origin xyz="0 0 0.2" rpy="1.5708 0 1.5708"/>
+    <parent link="base_link"/>
+    <child link="link_1"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.47" upper="3.142" effort="300" velocity="3"/>
+    <dynamics damping="1.0" friction="0.2"/>
+  </joint>
+
+  <link name="link_2">
+    <inertial>
+      <origin xyz="0 0.16752 0" rpy="0 0 0"/>
+      <mass value="5.5867"/>
+      <inertia ixx="0.12632" ixy="8.4877E-17" ixz="7.8685E-19"
+               iyy="0.011401" iyz="1.4432E-16" izz="0.12911"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/link_2.STL"/></geometry>
+      <material name=""><color rgba="0.79216 0.81961 0.93333 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/link_2.STL"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="joint_2" type="revolute">
+    <origin xyz="0 0.205 0" rpy="0 0 0"/>
+    <parent link="link_1"/>
+    <child link="link_2"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-1.57" upper="1.57" effort="200" velocity="3"/>
+    <dynamics damping="1.0" friction="0.2"/>
+  </joint>
+
+  <link name="link_3">
+    <inertial>
+      <origin xyz="-0.17893 0 0" rpy="0 0 0"/>
+      <mass value="2.8262"/>
+      <inertia ixx="0.0074041" ixy="-1.7927E-17" ixz="4.2672E-17"
+               iyy="0.028552" iyz="-3.4736E-10" izz="0.025128"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/link_3.STL"/></geometry>
+      <material name=""><color rgba="0.79216 0.81961 0.93333 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/link_3.STL"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="joint_3" type="revolute">
+    <origin xyz="0 0.4 0" rpy="0 0 0"/>
+    <parent link="link_2"/>
+    <child link="link_3"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-1.571" upper="3.142" effort="200" velocity="3"/>
+    <dynamics damping="1.0" friction="0.2"/>
+  </joint>
+
+  <link name="link_4">
+    <inertial>
+      <origin xyz="-0.051672 0 0" rpy="0 0 0"/>
+      <mass value="1.8097"/>
+      <inertia ixx="0.0023112" ixy="-9.6437E-18" ixz="-9.9829E-19"
+               iyy="0.0096102" iyz="1.3194E-19" izz="0.0093908"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/link_4.STL"/></geometry>
+      <material name=""><color rgba="0.79216 0.81961 0.93333 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/link_4.STL"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="joint_4" type="revolute">
+    <origin xyz="-0.35 0 0" rpy="0 0 1.5708"/>
+    <parent link="link_3"/>
+    <child link="link_4"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-1.571" upper="3.142" effort="200" velocity="3"/>
+    <dynamics damping="1.0" friction="0.2"/>
+  </joint>
+
+  <link name="link_5">
+    <inertial>
+      <origin xyz="-0.018544 0 0" rpy="0 0 0"/>
+      <mass value="0.19053"/>
+      <inertia ixx="0.00030197" ixy="1.6611E-20" ixz="3.6309E-21"
+               iyy="0.00022817" iyz="-1.9664E-11" izz="0.00011843"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/link_5.STL"/></geometry>
+      <material name=""><color rgba="0.79216 0.81961 0.93333 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/link_5.STL"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="joint_5" type="revolute">
+    <origin xyz="-0.188 0 0" rpy="0 0 0"/>
+    <parent link="link_4"/>
+    <child link="link_5"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0" upper="3.142" effort="200" velocity="3"/>
+    <dynamics damping="1.0" friction="0.2"/>
+  </joint>
+
+  <!-- ══════════════════════════════════════════════
+       Gripper links (بدون تغییر)
+       ══════════════════════════════════════════════ -->
+  <link name="link_6">
+    <inertial>
+      <origin xyz="-0.60237 0.4 -0.016013" rpy="0 0 0"/>
+      <mass value="0.11653"/>
+      <inertia ixx="3.9246E-05" ixy="-9.4878E-20" ixz="1.0258E-05"
+               iyy="7.1189E-05" iyz="-3.4206E-20" izz="8.4875E-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/link_6.STL"/></geometry>
+      <material name=""><color rgba="0.79216 0.81961 0.93333 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/link_6.STL"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="joint_6" type="prismatic">
+    <origin xyz="0.54 -0.4 0" rpy="0 0 0"/>
+    <parent link="link_5"/>
+    <child link="link_6"/>
+    <axis xyz="0 0 -1"/>
+    <limit lower="0" upper="0.03" effort="100" velocity="3"/>
+    <dynamics damping="1.0" friction="0.2"/>
+  </joint>
+
+  <link name="link_7">
+    <inertial>
+      <origin xyz="-0.60237 0.4 -0.016013" rpy="0 0 0"/>
+      <mass value="0.11653"/>
+      <inertia ixx="3.9246E-05" ixy="-4.7946E-20" ixz="1.0258E-05"
+               iyy="7.1189E-05" iyz="-3.946E-20" izz="8.4875E-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/link_7.STL"/></geometry>
+      <material name=""><color rgba="0.79216 0.81961 0.93333 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><mesh filename="package://combined_pkg/meshes/link_7.STL"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="joint_7" type="prismatic">
+    <origin xyz="0.54 0.4 0" rpy="3.1416 0 0"/>
+    <parent link="link_5"/>
+    <child link="link_7"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.03" upper="0" effort="100" velocity="3"/>
+    <dynamics damping="1.0" friction="0.2"/>
+  </joint>
+
+   <!-- ══════════════════════════════════════════════
+       ros2_control
+       ══════════════════════════════════════════════ -->
+  <ros2_control name="GazeboSystem" type="system">
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+
+    <!-- Arm joints -->
+    <joint name="joint_1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="joint_2">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="joint_3">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="joint_4">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="joint_5">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="joint_6">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+    <joint name="joint_7">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+  </ros2_control>
+  
+ <!-- Gazebo plugin for camera -->
+  <gazebo reference="camera">
+    <sensor name="camera_sensor" type="camera">
+      <always_on>true</always_on>
+      <update_rate>10.0</update_rate>
+      <visualize>false</visualize>
+      <topic>camera</topic>
+      <camera>
+        <horizontal_fov>1.047</horizontal_fov>
+        <image>
+          <width>320</width>
+          <height>240</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.05</near>
+          <far>10.0</far>
+        </clip>
+      </camera>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="belt_surface">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <minDepth>0.001</minDepth>
+    <maxVel>1.0</maxVel>
+  </gazebo>
+
+  <!-- Gazebo plugin for ros2_control -->
+  <gazebo>
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>/home/a/ros2_ws/src/combined_pkg/config/ros2_controllers.yaml</parameters>
+      <robot_param_node>robot_state_publisher</robot_param_node>
+    </plugin>
+  </gazebo>
+
+  <!-- Gazebo plugin for belt control -->
+  <gazebo>
+    <plugin filename="gz-sim-track-controller-system"
+            name="gz::sim::systems::TrackController">
+      <link>belt_surface</link>
+      <!-- محور حرکت نوار تو تقریباً Y است؛ پیش‌فرض پلاگین +X است -->
+      <track_orientation>0 0 1.5708</track_orientation>
+      <odometry_publish_frequency>1</odometry_publish_frequency>
+    </plugin>
+  </gazebo>
+
+  <!-- Gazebo plugin for magnet -->
+  <gazebo>
+    <plugin
+      filename="MagnetGripperSystem"
+      name="magnet_gripper_gz::MagnetGripperSystem">
+      <link_name>link_6</link_name>
+      <max_distance>0.12</max_distance>
+      <attach_topic>/magnet/attach</attach_topic>
+      <status_topic>/magnet/status</status_topic>
+    </plugin>
+  </gazebo>
+
+</robot>
